@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>folio-48</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600&family=Fraunces:opsz,wght@9..144,560&display=swap" media="print" onload="this.media='all'">
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #c5d0dc;
+      --ink: #1b1d22;
+      --bezel: #14161c;
+      --ghost: #3c4654;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: Barlow, "Avenir Next", "Trebuchet MS", sans-serif;
+      font-size: 18px;
+      line-height: 1.45;
+    }
+    main {
+      width: min(720px, calc(100% - 32px));
+      margin: 32px auto 64px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-family: Fraunces, Palatino, "Palatino Linotype", serif;
+      font-weight: 560;
+      font-size: clamp(48px, 10vw, 72px);
+      line-height: 0.9;
+      letter-spacing: -0.035em;
+    }
+    p { margin: 0 0 14px; max-width: 38em; }
+    .help { color: var(--ghost); }
+    .tape {
+      display: flex;
+      gap: 4px;
+      width: min(100%, 420px);
+      margin: 0 0 14px;
+    }
+    .tape span {
+      flex: 1 1 0;
+      max-width: 36px;
+      height: 36px;
+      background: var(--bezel);
+      color: #f4f7fa;
+      font-family: "Courier New", Courier, monospace;
+      font-weight: 600;
+      font-size: 22px;
+      line-height: 36px;
+      text-align: center;
+    }
+    .tape span.pad { color: #8b95a3; }
+    button[aria-pressed="true"] {
+      background: #f4f7fa;
+      color: var(--ink);
+    }
+    #image {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+    }
+    .plate {
+      width: min(676px, 100%);
+      background: var(--bezel);
+      padding: 16px 16px 0;
+      margin: 8px 0 16px;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: #000;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+    .rainbow {
+      height: 8px;
+      margin-top: 12px;
+      background: linear-gradient(90deg,
+        #000 0 12.5%,
+        #00f 0 25%,
+        #f00 0 37.5%,
+        #f0f 0 50%,
+        #0f0 0 62.5%,
+        #0ff 0 75%,
+        #ff0 0 87.5%,
+        #fff 0 100%);
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 16px;
+    }
+    button {
+      font: 600 16px/1 Barlow, "Avenir Next", "Trebuchet MS", sans-serif;
+      color: #f4f7fa;
+      background: var(--bezel);
+      border: 0;
+      padding: 12px 14px;
+      cursor: pointer;
+    }
+    button:focus-visible, canvas:focus-visible {
+      outline: 3px solid var(--ink);
+      outline-offset: 3px;
+    }
+    #press { padding: 12px 18px; }
+    #status { min-height: 1.45em; }
+    .note { color: var(--ghost); font-size: 16px; max-width: 40em; }
+    a { color: var(--ink); }
+    @media (prefers-reduced-motion: reduce) {
+      * { scroll-behavior: auto; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>folio-48</h1>
+    <p class="help">Spectrum program name</p>
+    <div id="tape" class="tape" role="img" aria-label="Spectrum tape name F O L I O space space space space space">
+      <span>F</span><span>O</span><span>L</span><span>I</span><span>O</span><span class="pad">·</span><span class="pad">·</span><span class="pad">·</span><span class="pad">·</span><span class="pad">·</span>
+    </div>
+    <p class="help">Ten characters, the way a ZX Spectrum tape header stores a program name. Spaces are the dots. folio-48 is the machine. The test program is FOLIO.</p>
+    <p id="blurb">Collect the yellow leaves. Avoid the red hunter.</p>
+    <div class="row" id="programs">
+      <button type="button" data-program="FOLIO" aria-pressed="true">FOLIO</button>
+      <button type="button" data-program="DRIFT">DRIFT</button>
+      <button type="button" data-program="PIPS">PIPS</button>
+      <button type="button" data-program="CASTAWAY">Castaway</button>
+      <button type="button" id="load">Load a Spectrum image</button>
+    </div>
+    <p class="help">FOLIO, DRIFT and PIPS are original programs written for this machine. Castaway is a 2016 game by Juan J. Martínez. Its tape name is castawy, the filename he published, then three spaces. Load a .z80, .sna, .tap, .tzx, .scr or .rom from this computer, or drop it on the screen. Nothing is uploaded.</p>
+    <input id="image" type="file" accept=".z80,.sna,.tap,.tzx,.scr,.rom,.bin,.raw">
+    <div class="plate">
+      <canvas id="screen" width="320" height="256" tabindex="0" aria-label="Program FOLIO on a ZX Spectrum 48K"></canvas>
+      <div class="rainbow"></div>
+    </div>
+    <p class="help" id="controls">Q up, A down, O left, P right. Space starts again.</p>
+    <div class="row">
+      <button type="button" data-key="5,1">Left</button>
+      <button type="button" data-key="5,0">Right</button>
+      <button type="button" data-key="2,0">Up</button>
+      <button type="button" data-key="1,0">Down</button>
+      <button type="button" data-key="7,0">Space</button>
+      <button type="button" data-key="3,0">1</button>
+    </div>
+    <div class="row">
+      <button type="button" id="press">Press into a PDF</button>
+    </div>
+    <p class="note">The 48K Sinclair ROM is included. Amstrad have kindly given their permission for the redistribution of their copyrighted material but retain that copyright, and the notice inside the ROM is unchanged. A tape with CLEAR and RANDOMIZE USR starts at that address after the ROM has set the machine up. A loader that only reads the ear is skipped, and the largest CODE block starts instead. A snapshot runs with this ROM. FOLIO, DRIFT and PIPS do not use it. A BASIC program with no machine-code entry is refused. A .scr file is the picture only. A 128K .z80 shows the 48K that was paged in.</p>
+    <p class="note">The PDF runs in desktop Adobe Acrobat, or the free Acrobat Reader 7.0 or later, including current builds through 2026. Allow JavaScript, then Space starts the game. <a href="https://get.adobe.com/reader/">Download Acrobat Reader</a>. The web and mobile Acrobat apps do not run this script.</p>
+    <p class="note">The game is document JavaScript: a timer repaints the screen. PDFium, the viewer in Chrome, Edge, and other Chromium browsers, is built without that JavaScript engine, so it draws the picture and Space does nothing. macOS Preview and Safari do the same. Firefox runs only a small safe piece of Acrobat JavaScript, not this timer.</p>
+    <p id="status" aria-live="polite"></p>
+  </main>
+  <script src="vendor/Z80.js"></script>
+  <script src="src/assemble.js"></script>
+  <script src="src/game.js"></script>
+  <script src="src/examples.js"></script>
+  <script src="src/spectrum.js"></script>
+  <script src="src/rom.js"></script>
+  <script src="src/castaway.js"></script>
+  <script src="src/image.js"></script>
+  <script src="src/pdf.js"></script>
+  <script src="src/play.js"></script>
+  <script src="src/main.js"></script>
+</body>
+</html>
