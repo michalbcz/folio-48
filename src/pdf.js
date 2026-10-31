@@ -136,6 +136,24 @@ function pdfColor(index) {
   return (rgb[0] / 255).toFixed(4) + " " + (rgb[1] / 255).toFixed(4) + " " + (rgb[2] / 255).toFixed(4);
 }
 
+function pdfProgramFile(tape) {
+  var raw = String(tape || "FOLIO").replace(/ +$/, "");
+  var out = "";
+  var i, c;
+  for (i = 0; i < raw.length; i++) {
+    c = raw.charAt(i);
+    if ((c >= "A" && c <= "Z") || (c >= "a" && c <= "z") || (c >= "0" && c <= "9") || c === " " || c === "-" || c === "_") out += c;
+    else out += "-";
+  }
+  out = out.replace(/^ +| +$/g, "").replace(/-+/g, "-").replace(/^-+|-+$/g, "");
+  if (!out) out = "folio-48";
+  return out;
+}
+
+function pdfDownloadName(tape) {
+  return pdfProgramFile(tape) + ".pdf";
+}
+
 function buildFolioPdf(options) {
   var snap = options.snapshot;
   var mem = spectrumDecode(snap.mem);
@@ -275,7 +293,7 @@ function buildFolioPdf(options) {
 
   var link = add("<< /Type /Annot /Subtype /Link /Rect [48 604 230 620] /Border [0 0 0] /A << /S /URI /URI (https://get.adobe.com/reader/) >> >>");
   if (link !== linkId) throw new Error("reader link object drifted");
-  var info = add("<< /Title (folio-48) /Producer (folio-48) >>");
+  var info = add("<< /Title (" + pdfProgramFile(tapeName) + ") /Producer (folio-48) >>");
   if (bodies.length !== info) throw new Error("object count drifted");
   if (bodies[7].indexOf("folioBoot") < 0 && bodies[7].indexOf("folioFrame") < 0) {
     // stream object is index 7 (object 8)
@@ -367,7 +385,7 @@ function buildFolioHtml(options) {
     "    var blob = new Blob([FOLIO_PDF], { type: \"application/pdf\" });",
     "    var link = document.createElement(\"a\");",
     "    link.href = URL.createObjectURL(blob);",
-    "    link.download = \"folio-48.pdf\";",
+    "    link.download = \"" + pdfDownloadName(options.tape).replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + "\";",
     "    document.body.appendChild(link);",
     "    link.click();",
     "    link.remove();",

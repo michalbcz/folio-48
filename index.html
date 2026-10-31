@@ -128,7 +128,6 @@
       <span>F</span><span>O</span><span>L</span><span>I</span><span>O</span><span class="pad">·</span><span class="pad">·</span><span class="pad">·</span><span class="pad">·</span><span class="pad">·</span>
     </div>
     <p class="help">Ten characters, the way a ZX Spectrum tape header stores a program name. Spaces are the dots. folio-48 is the machine. The test program is FOLIO.</p>
-    <p id="blurb">Collect the yellow leaves. Avoid the red hunter.</p>
     <div class="row" id="programs">
       <button type="button" data-program="FOLIO" aria-pressed="true">FOLIO</button>
       <button type="button" data-program="DRIFT">DRIFT</button>
@@ -136,6 +135,8 @@
       <button type="button" data-program="CASTAWAY">Castaway</button>
       <button type="button" id="load">Load a Spectrum image</button>
     </div>
+    <p id="blurb">Collect the yellow leaves. Avoid the red hunter.</p>
+
     <p class="help">FOLIO, DRIFT and PIPS are original programs written for this machine. Castaway is a 2016 game by Juan J. Martínez. Its tape name is castawy, the filename he published, then three spaces. Load a .z80, .sna, .tap, .tzx, .scr or .rom from this computer, or drop it on the screen. Nothing is uploaded.</p>
     <input id="image" type="file" accept=".z80,.sna,.tap,.tzx,.scr,.rom,.bin,.raw">
     <div class="plate">
@@ -150,11 +151,15 @@
       <button type="button" data-key="1,0">Down</button>
       <button type="button" data-key="7,0">Space</button>
       <button type="button" data-key="3,0">1</button>
+      <button type="button" data-key="3,1">2</button>
+      <button type="button" data-key="3,2">3</button>
+      <button type="button" data-key="3,3">4</button>
+      <button type="button" data-key="3,4">5</button>
     </div>
     <div class="row">
       <button type="button" id="press">Press into a PDF</button>
     </div>
-    <p class="note">The 48K Sinclair ROM is included. Amstrad have kindly given their permission for the redistribution of their copyrighted material but retain that copyright, and the notice inside the ROM is unchanged. A tape with CLEAR and RANDOMIZE USR starts at that address after the ROM has set the machine up. A loader that only reads the ear is skipped, and the largest CODE block starts instead. A snapshot runs with this ROM. FOLIO, DRIFT and PIPS do not use it. A BASIC program with no machine-code entry is refused. A .scr file is the picture only. A 128K .z80 shows the 48K that was paged in.</p>
+    <p class="note">The 48K Sinclair ROM is included. Amstrad have kindly given their permission for the redistribution of their copyrighted material but retain that copyright, and the notice inside the ROM is unchanged. A tape with CLEAR and RANDOMIZE USR starts at that address after the ROM has set the machine up. A loader that only reads the ear is skipped, and the largest CODE block starts instead. When a program later calls that ROM loader, the next matching block in the file is copied into RAM. A snapshot runs with this ROM. FOLIO, DRIFT and PIPS do not use it. A BASIC program with no machine-code entry is refused. A .scr file is the picture only. A 128K .z80 shows the 48K that was paged in.</p>
     <p class="note">The PDF runs in desktop Adobe Acrobat, or the free Acrobat Reader 7.0 or later, including current builds through 2026. Allow JavaScript, then Space starts the game. <a href="https://get.adobe.com/reader/">Download Acrobat Reader</a>. The web and mobile Acrobat apps do not run this script.</p>
     <p class="note">The game is document JavaScript: a timer repaints the screen. PDFium, the viewer in Chrome, Edge, and other Chromium browsers, is built without that JavaScript engine, so it draws the picture and Space does nothing. macOS Preview and Safari do the same. Firefox runs only a small safe piece of Acrobat JavaScript, not this timer.</p>
     <p id="status" aria-live="polite"></p>

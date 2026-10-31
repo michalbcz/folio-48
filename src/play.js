@@ -7,19 +7,6 @@ var audioTime = 0;
 var keysBound = false;
 var loopStarted = false;
 
-var KEYMAP = {
-  o: [5, 1], O: [5, 1], ArrowLeft: [5, 1],
-  p: [5, 0], P: [5, 0], ArrowRight: [5, 0],
-  q: [2, 0], Q: [2, 0], ArrowUp: [2, 0],
-  a: [1, 0], A: [1, 0], ArrowDown: [1, 0],
-  h: [6, 4], H: [6, 4],
-  "1": [3, 0],
-  "2": [3, 1],
-  "3": [3, 2],
-  "4": [3, 3],
-  " ": [7, 0]
-};
-
 function ensureAudio() {
   var AC = window.AudioContext || window.webkitAudioContext;
   if (!AC) return null;
@@ -115,14 +102,14 @@ function onFrame(ts) {
 
 function bindKeys() {
   document.addEventListener("keydown", function (event) {
-    var mapped = KEYMAP[event.key];
+    var mapped = spectrumKey(event.code) || spectrumKey(event.key);
     if (!mapped) return;
     ensureAudio();
     machine.setKey(mapped[0], mapped[1], true);
-    if (event.key === " " || event.key.indexOf("Arrow") === 0) event.preventDefault();
+    if (!event.metaKey) event.preventDefault();
   });
   document.addEventListener("keyup", function (event) {
-    var mapped = KEYMAP[event.key];
+    var mapped = spectrumKey(event.code) || spectrumKey(event.key);
     if (!mapped) return;
     machine.setKey(mapped[0], mapped[1], false);
   });

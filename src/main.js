@@ -45,8 +45,9 @@ function pressMachine() {
         setStatus(fail.message);
         return;
       }
-      downloadText("folio-48.pdf", "application/pdf", pdf);
-      setStatus("Saved folio-48.pdf. The tape name in it is " + currentTape.replace(/ +$/, "") + ". Open it in desktop Acrobat or Reader 7.0 or later and allow JavaScript. PDFium in Chrome only shows the picture.");
+      var fileName = pdfDownloadName(currentTape);
+      downloadText(fileName, "application/pdf", pdf);
+      setStatus("Saved " + fileName + ". Open it in desktop Acrobat or Reader 7.0 or later and allow JavaScript. PDFium in Chrome only shows the picture.");
     });
   });
 }
@@ -138,6 +139,7 @@ function readLocalImage(file) {
     try { ensureAudio(); } catch (ignore) {}
     renderTape(parsed.program);
     showRunning("", parsed.blurb);
+    document.getElementById("controls").textContent = "The Spectrum keyboard is live. Shift is Caps Shift, Ctrl is Symbol Shift. Arrows are O, P, Q and A.";
     machine = mountSpectrumImage(parsed);
     folioPlay(machine);
     setStatus(parsed.note);

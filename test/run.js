@@ -158,6 +158,12 @@ assert.ok(pdf.indexOf("https://get.adobe.com/reader/") > 0);
 assert.ok(pdf.indexOf("PDFium") > 0);
 assert.ok(pdf.indexOf("/Subtype /Link") > 0);
 assert.ok(pdf.indexOf("Tape name " + context.spectrumTapeName("FOLIO") + ", ten characters, padded with spaces.") > 0);
+assert.ok(pdf.indexOf("/Title (FOLIO)") > 0);
+assert.strictEqual(context.pdfDownloadName("FOLIO     "), "FOLIO.pdf");
+assert.strictEqual(context.pdfDownloadName("castawy   "), "castawy.pdf");
+assert.strictEqual(context.pdfDownloadName("LSQUAD    "), "LSQUAD.pdf");
+assert.strictEqual(context.pdfDownloadName("A/B:C"), "A-B-C.pdf");
+assert.strictEqual(context.pdfDownloadName("   "), "folio-48.pdf");
 
 var title = new context.Spectrum(rom);
 run(title, 8);
@@ -498,6 +504,98 @@ var parsedBasic = context.parseSpectrumImage(basicTap, "basic.tap");
 assert.strictEqual(parsedBasic.ok, false);
 assert.ok(parsedBasic.note.indexOf("BASIC") > 0);
 assert.ok(parsedBasic.note.indexOf("Sinclair ROM") > 0);
+
+function keyIs(code, row, bit) {
+  var hit = context.spectrumKey(code);
+  assert.ok(hit, code);
+  assert.strictEqual(hit[0], row, code);
+  assert.strictEqual(hit[1], bit, code);
+}
+keyIs("Digit5", 3, 4);
+keyIs("KeyQ", 2, 0);
+keyIs("ArrowLeft", 5, 1);
+keyIs("ControlLeft", 7, 1);
+keyIs(" ", 7, 0);
+assert.strictEqual(context.spectrumKey("KeySlash"), null);
+
+var extraTap = codeTap.concat(tapBlock(0x64, [9, 8, 7, 6]), tapBlock(0x65, [4, 3, 2, 1]));
+var parsedExtra = context.parseSpectrumImage(extraTap, "extra.tap");
+assert.ok(parsedExtra.ok, parsedExtra.note);
+assert.ok(parsedExtra.note.indexOf("ROM loader") > 0, parsedExtra.note);
+var extraMachine = context.mountSpectrumImage(parsedExtra);
+assert.strictEqual(extraMachine.tape.length, 2);
+assert.strictEqual(extraMachine.tape[0].flag, 0x64);
+run(extraMachine, 2);
+assert.strictEqual(extraMachine.border, 4, "a trailing tape block stopped the placed code");
+
+function pokeBytes(machine, addr, bytes) {
+  var n;
+  for (n = 0; n < bytes.length; n++) machine.mem[(addr + n) & 65535] = bytes[n] & 255;
+}
+function runTapeStub(machine, addr) {
+  var st = machine.cpu.getState();
+  st.pc = addr;
+  st.sp = 0xff80;
+  st.iff1 = 0;
+  st.iff2 = 0;
+  st.halted = false;
+  machine.cpu.setState(st);
+  machine.mem[0xc000] = 0;
+  machine.mem[0xc001] = 0;
+  machine.mem[0xc002] = 0;
+  machine.mem[0xc003] = 0;
+  machine.mem[0xc010] = 0;
+  run(machine, 2);
+}
+var jumpLoader = [
+  0x3e, 0x64, 0x11, 0x04, 0x00, 0xdd, 0x21, 0x00, 0xc0, 0x37,
+  0x14, 0x08, 0x15, 0x21, 0x14, 0x80, 0xe5, 0xc3, 0x62, 0x05,
+  0xd2, 0x1c, 0x80, 0x3e, 0x01, 0xc3, 0x1e, 0x80, 0x3e, 0x00,
+  0x32, 0x10, 0xc0, 0xc3, 0x1e, 0x80
+];
+var primed = context.spectrumBootedMachine();
+primed.tape = [{ flag: 0x64, data: [9, 8, 7, 6] }, { flag: 0x65, data: [4, 3, 2, 1] }];
+primed.tapePos = 0;
+pokeBytes(primed, 0x8000, jumpLoader);
+runTapeStub(primed, 0x8000);
+assert.strictEqual(primed.mem[0xc000], 9);
+assert.strictEqual(primed.mem[0xc001], 8);
+assert.strictEqual(primed.mem[0xc002], 7);
+assert.strictEqual(primed.mem[0xc003], 6);
+assert.strictEqual(primed.mem[0xc010], 1, "ROM loader jump did not return carry set");
+assert.strictEqual(primed.tapePos, 1);
+
+pokeBytes(primed, 0x8001, [0x65]);
+runTapeStub(primed, 0x8000);
+assert.strictEqual(primed.mem[0xc000], 4);
+assert.strictEqual(primed.mem[0xc001], 3);
+assert.strictEqual(primed.mem[0xc002], 2);
+assert.strictEqual(primed.mem[0xc003], 1);
+assert.strictEqual(primed.mem[0xc010], 1, "second tape block was not found");
+
+pokeBytes(primed, 0x8001, [0x66]);
+runTapeStub(primed, 0x8000);
+assert.strictEqual(primed.mem[0xc000], 0);
+assert.strictEqual(primed.mem[0xc001], 0);
+assert.strictEqual(primed.mem[0xc002], 0);
+assert.strictEqual(primed.mem[0xc003], 0);
+assert.strictEqual(primed.mem[0xc010], 0, "a missing tape block should come back with carry clear");
+
+var callLoader = [
+  0x3e, 0xff, 0x11, 0x04, 0x00, 0xdd, 0x21, 0x00, 0xc0, 0x37,
+  0xcd, 0x56, 0x05, 0xd2, 0x15, 0x80, 0x3e, 0x01, 0xc3, 0x17, 0x80,
+  0x3e, 0x00, 0x32, 0x10, 0xc0, 0xc3, 0x17, 0x80
+];
+var called = context.spectrumBootedMachine();
+called.tape = [{ flag: 0xff, data: [5, 6, 7, 8] }];
+called.tapePos = 0;
+pokeBytes(called, 0x8000, callLoader);
+runTapeStub(called, 0x8000);
+assert.strictEqual(called.mem[0xc000], 5);
+assert.strictEqual(called.mem[0xc001], 6);
+assert.strictEqual(called.mem[0xc002], 7);
+assert.strictEqual(called.mem[0xc003], 8);
+assert.strictEqual(called.mem[0xc010], 1, "CALL 0556 did not load");
 
 var tzx = [0x5a, 0x58, 0x54, 0x61, 0x70, 0x65, 0x21, 0x1a, 1, 20];
 function pushTzx(body) {

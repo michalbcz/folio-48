@@ -2,6 +2,8 @@
 // .sna .z80 .tap .tzx .scr .rom, and a raw 16K, 48K or 64K dump.
 // A snapshot is mounted on the 48K Sinclair ROM. A tape with CLEAR and
 // RANDOMIZE USR is started there after that ROM has set the machine up.
+// Blocks that were not placed stay on the tape. A later call to the ROM
+// loader copies the next block with a matching flag.
 // FOLIO, DRIFT and PIPS do not use this path. A .scr file is only the picture.
 
 function spectrumTapeName(text) {
@@ -455,12 +457,24 @@ function placeCalls(bytes, target) {
   return false;
 }
 
+function withRemainingTape(parsed, blocks, consumed) {
+  var rest = [];
+  var i;
+  if (!parsed || !parsed.ok) return parsed;
+  for (i = 0; i < blocks.length; i++) if (!consumed[i]) rest.push(blocks[i]);
+  if (!rest.length) return parsed;
+  parsed.tape = rest;
+  if (parsed.note) parsed.note += " The blocks still on the tape are copied in when the program calls the ROM loader.";
+  return parsed;
+}
+
 function parseTapBlocks(blocks, filename) {
   var i, header, data, type, name, length, addr, placed, first, program, note, ram, at, copy, n;
   var codeName = "";
   var places = [];
   var launch = null;
   var found;
+  var consumed = [];
   ram = blankRam();
   placed = 0;
   first = 0;
@@ -478,10 +492,14 @@ function parseTapBlocks(blocks, filename) {
     if (type === 0 && data) {
       found = spectrumBasicLaunch(data);
       if (found) launch = found;
+      consumed[i] = 1;
+      consumed[i + 1] = 1;
       i += 1;
       continue;
     }
     if (type !== 3 || !data) continue;
+    consumed[i] = 1;
+    consumed[i + 1] = 1;
     i += 1;
     if (!codeName) codeName = name;
     n = data.length < length ? data.length : length;
@@ -527,7 +545,7 @@ function parseTapBlocks(blocks, filename) {
       if (launch.clear !== null) note += ", CLEAR " + launch.clear;
       note += ", start at USR " + entry + ".";
     }
-    return {
+    return withRemainingTape({
       ok: true,
       program: program,
       blurb: "Loaded from a tape image on this computer.",
@@ -546,7 +564,7 @@ function parseTapBlocks(blocks, filename) {
         iff: 1
       }),
       border: 7
-    };
+    }, blocks, consumed);
   }
   if (!placed) {
     if (!program) program = spectrumTapeName(imageBaseName(filename));
@@ -556,7 +574,7 @@ function parseTapBlocks(blocks, filename) {
   if (codeName && codeName !== program) {
     note = "The BASIC loader was not run. CODE " + codeName + " was placed at " + first + ".";
   }
-  return finishSnapshot({
+  return withRemainingTape(finishSnapshot({
     program: program,
     filename: filename || "a tape",
     ram: ram,
@@ -569,7 +587,7 @@ function parseTapBlocks(blocks, filename) {
       im: 1,
       iff: 1
     })
-  });
+  }), blocks, consumed);
 }
 
 function parseTap(bytes, filename) {
@@ -790,15 +808,20 @@ function mountTapeOnRom(parsed) {
 function mountSpectrumImage(parsed) {
   var rom = parsed.rom || (parsed.realRom ? spectrumSinclairRom() : spectrumStubRom());
   var machine, i;
-  if (parsed.useRom) return mountTapeOnRom(parsed);
-  machine = new Spectrum(rom);
-  if (parsed.ram) {
-    for (i = 0; i < parsed.ram.length && i < 49152; i++) machine.mem[0x4000 + i] = parsed.ram[i] & 255;
+  if (parsed.useRom) {
+    machine = mountTapeOnRom(parsed);
+  } else {
+    machine = new Spectrum(rom);
+    if (parsed.ram) {
+      for (i = 0; i < parsed.ram.length && i < 49152; i++) machine.mem[0x4000 + i] = parsed.ram[i] & 255;
+    }
+    if (parsed.state) machine.cpu.setState(parsed.state);
+    if (parsed.border !== undefined && parsed.border !== null) machine.border = parsed.border & 7;
+    machine.releaseKeys();
+    machine.frame = 0;
+    machine.speaker = 0;
   }
-  if (parsed.state) machine.cpu.setState(parsed.state);
-  if (parsed.border !== undefined && parsed.border !== null) machine.border = parsed.border & 7;
-  machine.releaseKeys();
-  machine.frame = 0;
-  machine.speaker = 0;
+  machine.tape = parsed.tape || null;
+  machine.tapePos = 0;
   return machine;
 }
