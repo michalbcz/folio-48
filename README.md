@@ -16,7 +16,7 @@ python3 -m http.server 8080
 
 Open [localhost:8080](http://localhost:8080). No build step or package installation needed.
 
-1. Play **FOLIO**, or choose another game.
+1. Play **FOLIO**, or choose another game. For **Castaway**, press Space to leave the intro, then **1** at its menu to select keyboard mode and start the game **in the browser before exporting**. The PDF cannot enter the menu's `1` key.
 2. Click **Press into a PDF** to download the machine in its current state—even mid-game.
 3. Open the downloaded file in **desktop Adobe Acrobat or the free desktop Acrobat Reader**.
 4. Enable Acrobat JavaScript in Settings/Preferences → JavaScript → Enable Acrobat JavaScript. If Acrobat asks whether to trust this document, allow it for your generated file.
