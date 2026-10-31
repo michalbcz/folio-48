@@ -1,27 +1,85 @@
 # folio-48
 
-Play a ZX Spectrum 48K in the browser, then press that machine into a PDF that still runs in Adobe Acrobat.
+**A ZX Spectrum 48K you can export to a PDF—and keep playing in Adobe Acrobat.**
 
-The page is the machine: a Z80, 16K of ROM, 48K of RAM, the screen, the border, the keyboard and the beeper. folio-48 is that machine. The program it runs first is named FOLIO. On a ZX Spectrum tape, the program name is ten characters, padded with spaces, so the header reads FOLIO and then five spaces. Collect the yellow leaves. The red hunter follows. Q is up, A is down, O is left, P is right, and Space starts again. After a moment it plays itself until you touch a direction.
+Play in your browser, click **Press into a PDF**, and take the running machine with you. The exported document contains the emulator and your current game state, so you can carry on inside a PDF reader. Finally, a document with a good reason to miss its deadline.
 
-DRIFT and PIPS are two more original programs in the same ROM, with those ten-character tape names. Dodge the red cell, or take the yellow pip. They are not commercial games.
+> [NSFW](https://en.wikipedia.org/wiki/Not_safe_for_work): Not Safe For Work… productivity. Just retro games and questionable uses of office software.
 
-Castaway is a 48K game by Juan J. Martínez, 2016. The tape header spells it castawy and then three spaces, which is the filename he published. At its menu, press 1 for the keyboard. O moves left, P moves right, Q jumps, and Space fires. The playable tape is the one from [his page](https://www.usebox.net/jjm/castaway/), redistributed under the notice in `vendor/castaway/README.txt` (Copyright 2016 Juan J. Martínez). His separate source tree is GPL-3.0, with those assets under CC-BY-SA: [reidrac/castaway-zx](https://github.com/reidrac/castaway-zx). This project ships the tape, not that source tree.
+## Try it
 
-The 48K Sinclair ROM is included so a tape or a snapshot can call it. Copyright 1982 Sinclair Research Ltd, later held by Amstrad. On 31 August 1999 Cliff Lawson of Amstrad wrote that emulator authors may redistribute the ROM if the copyright messages inside it are not altered, and that the ROM itself is not for sale. Amstrad have kindly given their permission for the redistribution of their copyrighted material but retain that copyright. FOLIO, DRIFT and PIPS do not use that ROM. They use the small ROM written for this project. The ROM bytes are in `src/rom.js`. SHA1 `5ea7c2b824672e914525d1d5c419d71b84a426a2`.
+From the project directory, run:
 
-Load a Spectrum image reads a `.z80`, `.sna`, `.tap`, `.tzx`, `.scr` or `.rom` file from this computer. Nothing is uploaded. You can also drop the file on the screen. A tape whose BASIC loader says CLEAR and RANDOMIZE USR is started there, after the Sinclair ROM has set up the machine. If that USR routine only loads more bytes through the ear, it is skipped: this machine does not play tape tones, so the largest CODE block is started instead. That is how Castaway begins. When the running program later calls the ROM loader, the next matching block still in the file is copied into RAM. That is how a multi-part tape, such as a game that loads a scenario after its menu, continues. A snapshot runs with the Sinclair ROM. A BASIC program with no machine-code entry is refused. A `.scr` file is the picture only. A 128K `.z80` is shown as the 48K that was paged in. A 128K `.sna` is not loaded. Press still writes whatever is on the machine now, and the PDF names that ten-character program.
-
-Press into a PDF writes the machine as it is now, mid-game if you are mid-game. The picture is the Spectrum screen. The program is document JavaScript: on open it restores that machine, focuses the keys field, and runs a frame about every 50 ms with `app.setInterval`. Space starts the game. Q, A, O, P and the buttons along the bottom are the same keys.
-
-That script runs in desktop Adobe Acrobat and in the free desktop Acrobat Reader, version 7.0 or later, including the current continuous builds through 2026. `app.setInterval` has been in the desktop API since Acrobat 5.0, and since Reader 7.0.5 the timer ends when the document closes. Turn JavaScript on (Settings or Preferences, JavaScript, Enable Acrobat JavaScript). If a bar asks whether to trust the document, allow it, then press Space. The download is [https://get.adobe.com/reader/](https://get.adobe.com/reader/). Acrobat on the web and the mobile Reader apps do not run this script.
-
-PDFium does not run it. Chrome, Edge, and the other Chromium browsers display a PDF with PDFium, and the copies shipped in those browsers are built without a JavaScript engine. The OpenAction, the document script, the button actions, and the keystroke script stay in the file and are never executed. PDFium still paints the page, which is why the Spectrum screen is visible and Space does nothing. macOS Preview and Safari use PDFKit and likewise only draw the page. Firefox’s viewer is PDF.js: it runs a small safe fragment of Acrobat JavaScript, such as alerts and some form calculations, and it does not implement this timer or the field repaint, so the game stays still there too.
-
-```
+```sh
 python3 -m http.server 8080
 ```
 
-Then open http://localhost:8080.
+Open [localhost:8080](http://localhost:8080). No build step or package installation needed.
 
-The Z80 interpreter in `vendor/Z80.js` is Molly Howell's, under the MIT license in `vendor/LICENSE`, with the small changes noted at the top of the file.
+1. Play **FOLIO**, or choose another game.
+2. Click **Press into a PDF** to download the machine in its current state—even mid-game.
+3. Open the downloaded file in **desktop Adobe Acrobat or the free desktop Acrobat Reader**.
+4. Enable Acrobat JavaScript in Settings/Preferences → JavaScript → Enable Acrobat JavaScript. If Acrobat asks whether to trust this document, allow it for your generated file.
+5. Use **Q / A / O / P** for up / down / left / right, and **Space** to start again in FOLIO. The PDF also has on-page control buttons. If typing does nothing, click its keys field.
+
+Need the reader? [Download Adobe Acrobat Reader](https://get.adobe.com/reader/).
+
+**Use desktop Acrobat for the exported game.** Browser PDF viewers, macOS Preview, and web/mobile Acrobat are not supported by this export; they may show the picture without running the game. Other PDF experiments below use different viewer features, so their compatibility can differ.
+
+## What's on the tape?
+
+| Program | What you're doing | Controls |
+| --- | --- | --- |
+| **FOLIO** | Collect yellow leaves while a red hunter follows you. It plays itself until you take over. | Q/A/O/P to move; Space to restart |
+| **DRIFT** | Dodge the red cell. | Q/A/O/P; Space |
+| **PIPS** | Chase the yellow pip. | Q/A/O/P; Space |
+| **Castaway** | Explore an alien planet in Juan J. Martínez's 2016 Spectrum game. | At the menu press 1 for keyboard; O/P to move, Q to jump, Space to fire |
+
+FOLIO, DRIFT, and PIPS are original programs made for this project. Castaway is bundled with its author's permission notice; see [third-party notices](THIRD_PARTY_NOTICES.md).
+
+## How does a PDF become a game?
+
+The browser runs a JavaScript Z80 interpreter with 48K of RAM, a screen, keyboard, border, and beeper. Export captures the memory and CPU state, then packs that snapshot and the emulator into PDF document JavaScript.
+
+In Acrobat, a timer advances the machine roughly every 50 ms. A grid of **32 × 24 PDF form fields** acts as the display, and a text field and buttons feed in key presses. It's a deliberately chunky rendering of the Spectrum screen; the PDF isn't a full-fidelity replacement for the browser emulator. The PDF controls expose Q/A/O/P and Space rather than the full Spectrum keyboard.
+
+Yes, the form fields have unionized into a games console.
+
+## Bring your own Spectrum files
+
+Click **Load a Spectrum image**, or drop a file onto the screen. Files are read locally; nothing is uploaded.
+
+Supported formats: `.z80`, `.sna`, `.tap`, `.tzx`, `.scr`, and `.rom`.
+
+A few limits before you dig out the whole tape collection:
+
+- Tape loading handles supported machine-code loaders and later ROM-loader calls, rather than playing tape audio. BASIC-only programs without a machine-code entry are refused.
+- A `.scr` file loads a picture, not a game.
+- A 128K `.z80` uses only the currently paged-in 48K; 128K `.sna` files are not supported.
+- Imported games may need keys beyond those available in the PDF. Start them in the browser before exporting when necessary.
+
+The PDF filename follows the loaded program's Spectrum tape name. Those names have ten characters: FOLIO and then five spaces, for example. Castaway uses `castawy` followed by three spaces. The little dots in the browser are padding spaces, not a secret code.
+
+## More documents behaving badly
+
+There are other wonderful ways to make a PDF reader reconsider its career:
+
+- [pdftris — Thomas Rinsma](https://github.com/ThomasRinsma/pdftris): Tetris rendered with PDF form fields and text-field input. His [write-up](https://th0mas.nl/2025/01/12/tetris-in-a-pdf/) explains the trick.
+- [DoomPDF — ading2210](https://github.com/ading2210/doompdf): Doom (1993) running inside a PDF. Of course someone asked whether it runs Doom.
+- [LinuxPDF — ading2210](https://github.com/ading2210/linuxpdf): Linux inside a PDF through a RISC-V emulator. For when your document needs an operating system.
+
+These are related projects, not dependencies. folio-48's particular party trick is exporting a running Spectrum from the browser into a playable Acrobat document.
+
+## Credits and license
+
+Created with **Grok 4.7**, with the project author assisting it along the way. Human curiosity, AI coding, and a PDF reader caught in the middle.
+
+The original code and documentation are released under [The Unlicense](LICENSE): use, change, share, or sell them, with no attribution requirement and no warranty. Do whatever you like with our bits.
+
+Bundled third-party code and data retain their own terms, including the Z80 interpreter, Castaway tape, and Sinclair ROM. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the scope and existing license files. The bundled Sinclair ROM has SHA-1 `5ea7c2b824672e914525d1d5c419d71b84a426a2`.
+
+For the automated checks, run:
+
+```sh
+node test/run.js
+```
